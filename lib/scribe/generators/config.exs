@@ -1,6 +1,6 @@
 [
-  host: "",
-  database: "",
-  user: "",
-  password: ""
+  host: "localhost",
+  database: "inkr",
+  user: "vagrant",
+  password: "inkr"
 ]

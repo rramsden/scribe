@@ -27,7 +27,7 @@ defmodule Scribe do
 
     create_version_table_if_needed(connection)
     latest_version = case :pgsql_connection.sql_query("SELECT MAX(version) FROM schema_versions", connection) do
-      {:selected, [{version}]} ->
+      {:selected, [{version}]} when is_binary(version) ->
         version
       _ ->
         0
@@ -40,12 +40,13 @@ defmodule Scribe do
 
   defp execute([], conn), do: :ok
   defp execute([migration|rest], conn) do
+    IO.puts "Running #{migration[:path]}..."
     [file: path] = Regex.captures(%r/\d+_(?<file>.*)\.exs/g, migration[:path])
     Code.require_file migration[:path]
-    migration_sql = Code.eval_string "#{Mix.Utils.camelize(path)}.up"
-    case :pgsql_connection.sql_query(migration_sql) do
+    {migration_sql, _} = Code.eval_string "#{Mix.Utils.camelize(path)}.up"
+    case :pgsql_connection.sql_query(migration_sql, conn) do
       {:error, reason} -> exit(reason)
-      _ -> :ok
+      _ -> IO.puts "Success"
     end
     :pgsql_connection.sql_query("INSERT INTO schema_versions VALUES ('#{migration[:version]}')", conn)
     execute(rest, conn)
