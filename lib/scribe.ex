@@ -21,7 +21,7 @@ defmodule Scribe do
   Looks in db/migrations and executes a migration
   """
   def migrate do
-    config = load_config
+    config = Scribe.Utils.load_config
     {:ok, _pid} = :pgsql_connection_sup.start_link()
     connection = :pgsql_connection.open(config[:database], config[:user], config[:password])
 
@@ -63,8 +63,6 @@ defmodule Scribe do
       version = Enum.first(String.split(Path.basename(path), "_")) |> String.to_integer |> tuple_to_list |> Enum.first
       [version: version, path: path]
     end
-    IO.puts "Version from database #{inspect(latest_version)}"
-    IO.puts "Migration metadata #{inspect(migrations)}"
     Enum.filter(migrations, fn(keyword_list) -> keyword_list[:version] > latest_version end)
   end
 
@@ -75,12 +73,5 @@ defmodule Scribe do
     );
     """
     :pgsql_connection.sql_query(create_table_sql, connection)
-  end
-
-  defp load_config do
-    config_path = Path.join(System.cwd, "db/config.exs")
-    {:ok, config} = File.read(config_path)
-    {result, _} = Code.eval_string(config)
-    result
   end
 end
