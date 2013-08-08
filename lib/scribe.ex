@@ -27,9 +27,9 @@ defmodule Scribe do
 
     create_version_table_if_needed(connection)
     latest_version = case :pgsql_connection.sql_query("SELECT MAX(version) FROM schema_versions", connection) do
-      {:selected, [{version}]} when is_binary(version) ->
+      {:selected, [{version}]} when is_integer(version) ->
         version
-      _ ->
+      output ->
         0
     end
 
@@ -40,15 +40,20 @@ defmodule Scribe do
 
   defp execute([], conn), do: :ok
   defp execute([migration|rest], conn) do
-    IO.puts "Running #{migration[:path]}..."
     [file: path] = Regex.captures(%r/\d+_(?<file>.*)\.exs/g, migration[:path])
     Code.require_file migration[:path]
-    {migration_sql, _} = Code.eval_string "#{Mix.Utils.camelize(path)}.up"
+
+    module = Mix.Utils.camelize(path)
+    IO.puts "== #{module}: migrating ======================"
+
+    {migration_sql, _} = Code.eval_string "#{module}.up"
     case :pgsql_connection.sql_query(migration_sql, conn) do
       {:error, reason} -> exit(reason)
-      _ -> IO.puts "Success"
+      _ -> :ok
     end
-    :pgsql_connection.sql_query("INSERT INTO schema_versions VALUES ('#{migration[:version]}')", conn)
+    {:updated, 1} = :pgsql_connection.sql_query("INSERT INTO schema_versions VALUES ('#{migration[:version]}')", conn)
+
+    IO.puts "== #{module}: migrated ======================="
     execute(rest, conn)
   end
 
@@ -58,6 +63,8 @@ defmodule Scribe do
       version = Enum.first(String.split(Path.basename(path), "_")) |> String.to_integer |> tuple_to_list |> Enum.first
       [version: version, path: path]
     end
+    IO.puts "Version from database #{inspect(latest_version)}"
+    IO.puts "Migration metadata #{inspect(migrations)}"
     Enum.filter(migrations, fn(keyword_list) -> keyword_list[:version] > latest_version end)
   end
 
