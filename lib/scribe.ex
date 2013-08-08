@@ -42,7 +42,11 @@ defmodule Scribe do
   defp execute([migration|rest], conn) do
     [file: path] = Regex.captures(%r/\d+_(?<file>.*)\.exs/g, migration[:path])
     Code.require_file migration[:path]
-    Code.eval_string "#{Mix.Utils.camelize(path)}.up"
+    migration_sql = Code.eval_string "#{Mix.Utils.camelize(path)}.up"
+    case :pgsql_connection.sql_query(migration_sql) do
+      {:error, reason} -> exit(reason)
+      _ -> :ok
+    end
     :pgsql_connection.sql_query("INSERT INTO schema_versions VALUES ('#{migration[:version]}')", conn)
     execute(rest, conn)
   end
