@@ -13,8 +13,6 @@ defmodule Scribe do
     source = Path.join(Path.dirname(__FILE__), "scribe/generators/config.exs")
     destination = Path.join( System.cwd, "db/config.exs" )
 
-    IO.puts "source = #{source}"
-    IO.puts "destination = #{destination}"
     :ok = File.cp(source, destination)
     IO.puts "CREATE db/config.exs"
   end
