@@ -4,7 +4,7 @@ defmodule ScribeUtilsTest do
 
   test "loads scribe config" do
     config = load_config( Path.join(Path.dirname(__FILE__), "../../lib/scribe/generators/config.exs") )
-    assert Keyword.keys(config) == [:host, :database, :user, :password]
+    assert Keyword.keys(config) == [:adapter, :host, :database, :user, :password]
   end
 
   test "generates timestamp" do
