@@ -2,6 +2,8 @@
 
 *Scribe* allows you to setup migrations for your Elixir projects.
 
+[![Build Status](https://secure.travis-ci.org/rramsden/scribe.png?branch=master)](http://travis-ci.org/rramsden/scribe)
+
 # Usage
 
 Add scribe as a mix dependency
