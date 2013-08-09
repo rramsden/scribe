@@ -7,7 +7,7 @@
 Add scribe as a mix dependency
 
     defp deps do
-      [{:scribe, github: "inkr/scribe"}]
+      [{:scribe, github: "rramsden/scribe"}]
     end
 
 Initialize a mix project with scribe
