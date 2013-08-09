@@ -17,8 +17,8 @@ Initialize a mix project with scribe
 
 Create a migration
 
-    mix scribe.migration users_table
+    mix db.migration users_table
 
 Run migrations
 
-    mix scribe.migrate
+    mix db.migrate
