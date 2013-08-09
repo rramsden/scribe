@@ -1,7 +1,7 @@
 language: erlang
 notifications:
   recipients:
-    - richard@inkr.com
+    - richard@rramsden.ca
 otp_release:
   - R16B
 before_install:
