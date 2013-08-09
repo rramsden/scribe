@@ -1,6 +1,7 @@
 [
+  adapter: "postgres",
   host: "localhost",
-  database: "inkr",
-  user: "vagrant",
-  password: "inkr"
+  database: "database",
+  user: "user",
+  password: "password"
 ]
