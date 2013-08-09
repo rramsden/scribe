@@ -3,19 +3,13 @@ defmodule Mix.Tasks.Db do
 
   defmodule Drop do
     def run(_) do
-      config = Scribe.Utils.load_config
-      IO.puts("== Dropping database #{config[:database]} =====================")
-      System.cmd("dropdb #{config[:database]}")
-      IO.puts("== Dropped #{config[:database]} ===============================")
+      Scribe.drop_database
     end
   end
 
   defmodule Create do
     def run(_) do
-      config = Scribe.Utils.load_config
-      IO.puts("== Creating database #{config[:database]} =====================")
-      System.cmd("createdb #{config[:database]}")
-      IO.puts("== Created #{config[:database]} ===============================")
+      Scribe.create_database
     end
   end
 

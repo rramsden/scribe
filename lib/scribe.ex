@@ -1,5 +1,6 @@
 defmodule Scribe do
   defrecord Config, host: nil, database: nil, user: nil, password: nil
+  import Scribe.Utils
 
   @doc """
   Initializes scribe files directory
@@ -15,6 +16,26 @@ defmodule Scribe do
 
     :ok = File.cp(source, destination)
     IO.puts "CREATE db/config.exs"
+  end
+
+  @doc """
+  Drop the database
+  """
+  def drop_database do
+    config = Scribe.Utils.load_config
+    time "Dropping Database: #{config[:database]}" do
+      System.cmd("dropdb #{config[:database]}")
+    end
+  end
+
+  @doc """
+  Create the database
+  """
+  def create_database do
+    config = Scribe.Utils.load_config
+    time "Creating Database: #{config[:database]}" do
+      System.cmd("createdb #{config[:database]}")
+    end
   end
 
   @doc """
@@ -44,16 +65,15 @@ defmodule Scribe do
     Code.require_file migration[:path]
 
     module = Mix.Utils.camelize(path)
-    IO.puts "== #{module}: migrating ======================"
 
-    {migration_sql, _} = Code.eval_string "#{module}.up"
-    case :pgsql_connection.sql_query(migration_sql, conn) do
-      {:error, reason} -> exit(reason)
-      _ -> :ok
+    time "Migrating: #{module}" do
+      {migration_sql, _} = Code.eval_string "#{module}.up"
+      case :pgsql_connection.sql_query(migration_sql, conn) do
+        {:error, reason} -> exit(reason)
+        _ -> :ok
+      end
+      {:updated, 1} = :pgsql_connection.sql_query("INSERT INTO schema_versions VALUES ('#{migration[:version]}')", conn)
     end
-    {:updated, 1} = :pgsql_connection.sql_query("INSERT INTO schema_versions VALUES ('#{migration[:version]}')", conn)
-
-    IO.puts "== #{module}: migrated ======================="
     execute(rest, conn)
   end
 
