@@ -1,6 +1,6 @@
 defmodule Scribe do
-  defrecord Config, host: nil, database: nil, user: nil, password: nil
   import Scribe.Utils
+  defrecord Config, adapter: nil, host: nil, database: nil, user: nil, password: nil
 
   @doc """
   Initializes scribe files directory
@@ -23,8 +23,9 @@ defmodule Scribe do
   """
   def drop_database do
     config = Scribe.Utils.load_config
-    time "Dropping Database: #{config[:database]}" do
-      System.cmd("dropdb #{config[:database]}")
+
+    time "Dropping Database: #{config.database}" do
+      config.adapter.drop_database(config)
     end
   end
 
@@ -33,8 +34,9 @@ defmodule Scribe do
   """
   def create_database do
     config = Scribe.Utils.load_config
-    time "Creating Database: #{config[:database]}" do
-      System.cmd("createdb #{config[:database]}")
+
+    time "Creating Database: #{config.database}" do
+      config.adapter.create_database(config)
     end
   end
 
@@ -43,24 +45,31 @@ defmodule Scribe do
   """
   def migrate do
     config = Scribe.Utils.load_config
-    {:ok, _pid} = :pgsql_connection_sup.start_link()
-    connection = :pgsql_connection.open(config[:database], config[:user], config[:password])
 
-    create_version_table_if_needed(connection)
-    latest_version = case :pgsql_connection.sql_query("SELECT MAX(version) FROM schema_versions", connection) do
-      {:selected, [{version}]} when is_integer(version) ->
+    # open persistent database connection
+    conn = config.adapter.start_link(config)
+
+    # create version table
+    config.adapter.execute(create_version_table_if_needed, conn)
+
+    # fetch latest version
+    latest_version = case config.adapter.select("SELECT MAX(version) FROM schema_versions", conn) do
+      {:ok, version} when is_integer(version) ->
         version
-      output ->
+      _ ->
         0
     end
 
     # fetch and execute latest migrations
     migrations = load_migrations(latest_version)
-    execute(migrations, connection)
+    execute(migrations, config.adapter, conn)
+
+    # close database connection
+    config.adapter.close(conn)
   end
 
-  defp execute([], conn), do: :ok
-  defp execute([migration|rest], conn) do
+  defp execute([], _adapter, _conn), do: :ok
+  defp execute([migration|rest], adapter, conn) do
     [file: path] = Regex.captures(%r/\d+_(?<file>.*)\.exs/g, migration[:path])
     Code.require_file migration[:path]
 
@@ -68,13 +77,13 @@ defmodule Scribe do
 
     time "Migrating: #{module}" do
       {migration_sql, _} = Code.eval_string "#{module}.up"
-      case :pgsql_connection.sql_query(migration_sql, conn) do
+      case adapter.execute(migration_sql, conn) do
         {:error, reason} -> exit(reason)
         _ -> :ok
       end
-      {:updated, 1} = :pgsql_connection.sql_query("INSERT INTO schema_versions VALUES ('#{migration[:version]}')", conn)
+      :ok = adapter.execute("INSERT INTO schema_versions VALUES ('#{migration[:version]}')", conn)
     end
-    execute(rest, conn)
+    execute(rest, adapter, conn)
   end
 
   defp load_migrations(latest_version) do
@@ -86,12 +95,11 @@ defmodule Scribe do
     Enum.filter(migrations, fn(keyword_list) -> keyword_list[:version] > latest_version end)
   end
 
-  defp create_version_table_if_needed(connection) do
-    create_table_sql = """
+  defp create_version_table_if_needed do
+    """
     CREATE TABLE schema_versions (
       version integer NOT NULL
     );
     """
-    :pgsql_connection.sql_query(create_table_sql, connection)
   end
 end

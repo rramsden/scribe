@@ -1,4 +1,6 @@
 defmodule Scribe.Utils do
+  alias Scribe.Config, as: Config
+
   @moduledoc """
   This module contains utility functions used in Scribe
   """
@@ -19,7 +21,11 @@ defmodule Scribe.Utils do
   def load_config(config_path // Path.join(System.cwd, "db/config.exs")) do
     {:ok, config} = File.read(config_path)
     {result, _} = Code.eval_string(config)
-    result
+
+    # we only have one adapter
+    result = Enum.map(result, fn({key, value}) -> {key, binary_to_list(value)} end)
+    result = Keyword.put(result, :adapter, Scribe.Adapters.Postgres)
+    Config.new(result)
   end
 
   @doc """
