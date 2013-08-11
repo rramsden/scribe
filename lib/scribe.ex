@@ -12,10 +12,10 @@ defmodule Scribe do
 
     # copy scribe database configuration
     source = Path.join(Path.dirname(__FILE__), "scribe/generators/config.exs")
-    destination = Path.join( System.cwd, "db/config.exs" )
+    destination = Path.join( System.cwd, "db/scribe.conf" )
 
     :ok = File.cp(source, destination)
-    IO.puts "CREATE db/config.exs"
+    IO.puts "CREATE #{Path.relative_to(destination, System.cwd)}"
   end
 
   @doc """
