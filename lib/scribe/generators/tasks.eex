@@ -1,0 +1,21 @@
+defmodule Mix.Tasks.Db do
+  use Mix.Task
+
+  def run(_), do: :ok
+
+  defmodule Drop do
+    def run(_), do: Scribe.drop_database
+  end
+
+  defmodule Create do
+    def run(_), do: Scribe.create_database
+  end
+
+  defmodule Migration do
+    def run([name]), do: Scribe.create_migration(name)
+  end
+
+  defmodule Migrate do
+    def run(_), do: Scribe.migrate
+  end
+end

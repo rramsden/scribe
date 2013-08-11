@@ -19,7 +19,10 @@ Initialize a mix project with scribe
 
     mix db.init #=> CREATE db/migrations
                     CREATE db/scribe.conf
+                    CREATE lib/my_module/tasks/db.ex
                     
+    mix compile # needed to run custom mix tasks
+
 Add your database settings in db/scribe.conf
 
     [
