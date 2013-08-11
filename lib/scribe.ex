@@ -8,13 +8,13 @@ defmodule Scribe do
   """
   def init(directory) do
     File.mkdir_p Path.join(directory, "db/migrations")
-    IO.puts "CREATE db/migrations"
+    puts "CREATE db/migrations"
 
     # copy scribe database configuration
     source = Path.join(Path.dirname(__FILE__), "scribe/generators/config.exs")
     destination = Path.join( System.cwd, "db/scribe.conf" )
     :ok = File.cp(source, destination)
-    IO.puts "CREATE #{Path.relative_to(destination, System.cwd)}"
+    puts "CREATE #{Path.relative_to(destination, System.cwd)}"
 
     # copy database tasks into project
     project_name = Path.basename(System.cwd)
@@ -22,10 +22,10 @@ defmodule Scribe do
     destination = Path.join( System.cwd, "lib/#{project_name}/tasks/db.ex" )
     File.mkdir_p( Path.dirname(destination) )
     :ok = File.cp(source, destination)
-    IO.puts "CREATE #{Path.relative_to(destination, System.cwd)}"
+    puts "CREATE #{Path.relative_to(destination, System.cwd)}"
   end
 
-  def create_migration(name) do
+  def create_migration(name, opts // []) do
     # generate tempalte
     template_path = Path.join(Path.dirname(__FILE__), "../generators/migration.eex")
     compiled_template = EEx.eval_file(template_path, [name: Mix.Utils.camelize(name)])
@@ -35,14 +35,14 @@ defmodule Scribe do
     write_path = Path.join(System.cwd, rel_path)
     File.write(write_path, compiled_template)
 
-    IO.puts "CREATE #{rel_path}"
+    puts "CREATE #{rel_path}"
   end
 
   @doc """
   Drop the database
   """
-  def drop_database do
-    config = Scribe.Utils.load_config
+  def drop_database(opts // []) do
+    config = Scribe.Utils.load_config(opts[:config_path])
 
     time "Dropping Database: #{config.database}" do
       config.adapter.drop_database(config)
@@ -52,8 +52,8 @@ defmodule Scribe do
   @doc """
   Create the database
   """
-  def create_database do
-    config = Scribe.Utils.load_config
+  def create_database(opts // []) do
+    config = Scribe.Utils.load_config(opts[:config_path])
 
     time "Creating Database: #{config.database}" do
       config.adapter.create_database(config)
@@ -63,8 +63,8 @@ defmodule Scribe do
   @doc """
   Looks in db/migrations and executes a migration
   """
-  def migrate do
-    config = Scribe.Utils.load_config
+  def migrate(opts // []) do
+    config = Scribe.Utils.load_config(opts[:config_path])
 
     # open persistent database connection
     conn = config.adapter.start_link(config)

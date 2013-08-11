@@ -9,9 +9,9 @@ defmodule Scribe.Utils do
   defmacro time(name, block) do
     quote do
       start_ms = timestamp_ms
-      IO.puts "== Task: #{unquote(name)} started ==================================="
+      puts "== Task: #{unquote(name)} started ==================================="
       unquote(block)
-      IO.puts "== Task: #{unquote(name)} (#{(timestamp_ms - start_ms) / 1000}ms) finished =================================="
+      puts "== Task: #{unquote(name)} (#{(timestamp_ms - start_ms) / 1000}ms) finished =================================="
     end
   end
 
@@ -41,5 +41,13 @@ defmodule Scribe.Utils do
   def timestamp_ms do
     {mega, second, micro} = :erlang.now
     (mega * 1000000 + second) * 1000000 + micro
+  end
+
+  def puts(output) do
+    if Mix.env == :test do
+      # output nothing
+    else
+      IO.puts(output)
+    end
   end
 end
