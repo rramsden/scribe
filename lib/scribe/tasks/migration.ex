@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Db do
   use Mix.Task
 
+  def run(_), do: :ok
+
   defmodule Drop do
     def run(_) do
       Scribe.drop_database
