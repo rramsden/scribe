@@ -1,7 +1,13 @@
 defmodule <%= name %> do
   def up do
+    """
+    CREATE TABLE some_table;
+    """
   end
 
   def down do
+    """
+    DROP TABLE some_table;
+    """
   end
 end
