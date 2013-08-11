@@ -17,7 +17,7 @@ contribute!
 
 Initialize a mix project with scribe
 
-    mix db.init #=> CREATE db/migrations
+    mix scribe.init #=> CREATE db/migrations
                     CREATE db/scribe.conf
                     CREATE lib/my_module/tasks/db.ex
                     
