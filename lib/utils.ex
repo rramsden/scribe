@@ -20,12 +20,13 @@ defmodule Scribe.Utils do
   """
   def load_config(config_path // Path.join(System.cwd, "db/scribe.conf")) do
     {:ok, config} = File.read(config_path)
-    {result, _} = Code.eval_string(config)
+    {config, _} = Code.eval_string(config)
 
-    # we only have one adapter
-    result = Enum.map(result, fn({key, value}) -> {key, binary_to_list(value)} end)
-    result = Keyword.put(result, :adapter, Scribe.Adapters.Postgres)
-    Config.new(result)
+    camelized = Mix.Utils.camelize(config[:adapter])
+    config = Enum.map(config, fn({key, value}) -> {key, binary_to_list(value)} end)
+    {adapter, _} = Code.eval_string("Scribe.Adapters.#{camelized}")
+    config = Config.new(config)
+    config.adapter(adapter)
   end
 
   @doc """
