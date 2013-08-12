@@ -12,17 +12,17 @@ defmodule Scribe do
 
     # copy scribe database configuration
     source = Path.join(Path.dirname(__FILE__), "scribe/generators/config.exs")
-    destination = Path.join( System.cwd, "db/scribe.conf" )
+    destination = Path.join( directory, "db/scribe.conf" )
     :ok = File.cp(source, destination)
     puts "CREATE #{Path.relative_to(destination, System.cwd)}"
 
     # copy database tasks into project
-    project_name = Path.basename(System.cwd)
+    project_name = Path.basename(directory)
     source = Path.join(Path.dirname(__FILE__), "scribe/generators/tasks.eex")
-    destination = Path.join( System.cwd, "lib/#{project_name}/tasks/db.ex" )
+    destination = Path.join( directory, "lib/#{project_name}/tasks/db.ex" )
     File.mkdir_p( Path.dirname(destination) )
     :ok = File.cp(source, destination)
-    puts "CREATE #{Path.relative_to(destination, System.cwd)}"
+    puts "CREATE #{Path.relative_to(destination, directory)}"
   end
 
   def create_migration(name, opts // []) do
