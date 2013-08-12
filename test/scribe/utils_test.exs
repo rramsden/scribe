@@ -3,7 +3,7 @@ defmodule ScribeUtilsTest do
   import Scribe.Utils
 
   test "loads scribe config" do
-    config = load_config( Path.join(Path.dirname(__FILE__), "../../lib/scribe/generators/config.exs") )
+    config = load_config( Path.join(Path.dirname(__FILE__), "../../lib/scribe/templates/config.eex") )
     assert is_record(config, Scribe.Config)
   end
 

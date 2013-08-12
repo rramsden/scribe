@@ -1,5 +1,6 @@
 defmodule Scribe do
   import Scribe.Utils
+  import Scribe.Generator
   defrecord Config, adapter: nil, host: nil, database: nil, user: nil, password: nil
 
   @doc """
@@ -8,34 +9,23 @@ defmodule Scribe do
   """
   def init(directory) do
     File.mkdir_p Path.join(directory, "db/migrations")
-    puts "CREATE db/migrations"
+    Scribe.Utils.puts "%{white}CREATE db/migrations"
 
     # copy scribe database configuration
-    source = Path.join(Path.dirname(__FILE__), "scribe/generators/config.exs")
     destination = Path.join( directory, "db/scribe.conf" )
-    :ok = File.cp(source, destination)
-    puts "CREATE #{Path.relative_to(destination, System.cwd)}"
+    create_file destination, "config"
 
     # copy database tasks into project
     project_name = Path.basename(directory)
-    source = Path.join(Path.dirname(__FILE__), "scribe/generators/tasks.eex")
     destination = Path.join( directory, "lib/#{project_name}/tasks/db.ex" )
-    File.mkdir_p( Path.dirname(destination) )
-    :ok = File.cp(source, destination)
-    puts "CREATE #{Path.relative_to(destination, directory)}"
+    create_file destination, "tasks"
   end
 
   def create_migration(name, directory) do
     # generate tempalte
-    template_path = Path.join(Path.dirname(__FILE__), "scribe/generators/migration.eex")
-    compiled_template = EEx.eval_file(template_path, [name: Mix.Utils.camelize(name)])
-
-    # write template to file
     rel_path = "db/migrations/#{Scribe.Utils.timestamp}_#{name}.exs"
-    write_path = Path.join(directory, rel_path)
-    File.write(write_path, compiled_template)
-
-    puts "CREATE #{rel_path}"
+    destination = Path.join(directory, rel_path)
+    create_file destination, "migration", [name: Mix.Utils.camelize(name)]
   end
 
   @doc """

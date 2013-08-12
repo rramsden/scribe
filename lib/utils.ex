@@ -48,7 +48,7 @@ defmodule Scribe.Utils do
     if Mix.env == :test do
       # output nothing
     else
-      IO.puts(output)
+      IO.puts IO.ANSI.escape(output)
     end
   end
 end
