@@ -1,5 +1,5 @@
 defmodule Scribe.Adapters.MockAdapter do
-  def start_link, do: :ok
+  def start_link(_config), do: :ok
   def close(_conn), do: :ok
   def execute(_sql, _conn), do: :ok
   def select(_sql, _conn), do: {:ok, "123"}
@@ -17,6 +17,7 @@ defmodule ScribeTest do
     # setup a temporary directory for a project
     tmp_dir = Path.join(System.tmp_dir, "my_project")
     File.mkdir_p(tmp_dir)
+    Scribe.init(tmp_dir)
     {:ok, tmp_dir: tmp_dir}
   end
 
@@ -26,22 +27,25 @@ defmodule ScribeTest do
   end
 
   test "create database" do
-    Scribe.create_database([{:config_path, @_config_path}])
+    Scribe.create_database(@_config_path)
   end
 
   test "drop database" do
-    Scribe.drop_database([{:config_path, @_config_path}])
+    Scribe.drop_database(@_config_path)
   end
 
   test "creates a migration", meta do
-    Scribe.init(meta[:tmp_dir])
     assert length(Path.wildcard(Path.join(meta[:tmp_dir], "db/migrations/*"))) == 0
     Scribe.create_migration("users", meta[:tmp_dir])
     assert length(Path.wildcard(Path.join(meta[:tmp_dir], "db/migrations/*"))) == 1
   end
 
+  test "runs a migration", meta do
+    Scribe.create_migration("users", meta[:tmp_dir])
+    Scribe.migrate(meta[:tmp_dir], @_config_path)
+  end
+
   test "initializes a project directory", meta do
-    Scribe.init(meta[:tmp_dir])
     assert File.exists?(Path.join(meta[:tmp_dir], "db/migrations"))
     assert File.exists?(Path.join(meta[:tmp_dir], "db/scribe.conf"))
     assert File.exists?(Path.join(meta[:tmp_dir], "lib/my_project/tasks/db.ex"))

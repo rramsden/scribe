@@ -18,7 +18,7 @@ defmodule Scribe.Utils do
   @doc """
   Load Scribe configuration file located in db/config.exs
   """
-  def load_config(config_path // Path.join(System.cwd, "db/scribe.conf")) do
+  def load_config(config_path) do
     {:ok, config} = File.read(config_path)
     {config, _} = Code.eval_string(config)
 

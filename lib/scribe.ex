@@ -25,7 +25,7 @@ defmodule Scribe do
     puts "CREATE #{Path.relative_to(destination, directory)}"
   end
 
-  def create_migration(name, directory, opts // []) do
+  def create_migration(name, directory) do
     # generate tempalte
     template_path = Path.join(Path.dirname(__FILE__), "scribe/generators/migration.eex")
     compiled_template = EEx.eval_file(template_path, [name: Mix.Utils.camelize(name)])
@@ -41,8 +41,8 @@ defmodule Scribe do
   @doc """
   Drop the database
   """
-  def drop_database(opts // []) do
-    config = Scribe.Utils.load_config(opts[:config_path])
+  def drop_database(config_path) do
+    config = Scribe.Utils.load_config(config_path)
 
     time "Dropping Database: #{config.database}" do
       config.adapter.drop_database(config)
@@ -52,8 +52,8 @@ defmodule Scribe do
   @doc """
   Create the database
   """
-  def create_database(opts // []) do
-    config = Scribe.Utils.load_config(opts[:config_path])
+  def create_database(config_path) do
+    config = Scribe.Utils.load_config(config_path)
 
     time "Creating Database: #{config.database}" do
       config.adapter.create_database(config)
@@ -63,8 +63,8 @@ defmodule Scribe do
   @doc """
   Looks in db/migrations and executes a migration
   """
-  def migrate(opts // []) do
-    config = Scribe.Utils.load_config(opts[:config_path])
+  def migrate(project_dir, config_path) do
+    config = Scribe.Utils.load_config(config_path)
 
     # open persistent database connection
     conn = config.adapter.start_link(config)
@@ -81,7 +81,7 @@ defmodule Scribe do
     end
 
     # fetch and execute latest migrations
-    migrations = load_migrations(latest_version)
+    migrations = load_migrations(latest_version, project_dir)
     execute(migrations, config.adapter, conn)
 
     # close database connection
@@ -90,7 +90,7 @@ defmodule Scribe do
 
   defp execute([], _adapter, _conn), do: :ok
   defp execute([migration|rest], adapter, conn) do
-    [file: path] = Regex.captures(%r/\d+_(?<file>.*)\.exs/g, migration[:path])
+    [file: path] = Regex.captures(%r/\/\d+_(?<file>.*)\.exs$/g, migration[:path])
     Code.require_file migration[:path]
 
     module = Mix.Utils.camelize(path)
@@ -106,8 +106,8 @@ defmodule Scribe do
     execute(rest, adapter, conn)
   end
 
-  defp load_migrations(latest_version) do
-    files = Path.wildcard(Path.join(System.cwd, "db/migrations/*"))
+  defp load_migrations(latest_version, project_dir) do
+    files = Path.wildcard(Path.join(project_dir, "db/migrations/*"))
     migrations = Enum.map files, fn(path) ->
       version = Enum.first(String.split(Path.basename(path), "_")) |> String.to_integer |> tuple_to_list |> Enum.first
       [version: version, path: path]
