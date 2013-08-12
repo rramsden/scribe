@@ -25,14 +25,14 @@ defmodule Scribe do
     puts "CREATE #{Path.relative_to(destination, directory)}"
   end
 
-  def create_migration(name, opts // []) do
+  def create_migration(name, directory, opts // []) do
     # generate tempalte
-    template_path = Path.join(Path.dirname(__FILE__), "../generators/migration.eex")
+    template_path = Path.join(Path.dirname(__FILE__), "scribe/generators/migration.eex")
     compiled_template = EEx.eval_file(template_path, [name: Mix.Utils.camelize(name)])
 
     # write template to file
     rel_path = "db/migrations/#{Scribe.Utils.timestamp}_#{name}.exs"
-    write_path = Path.join(System.cwd, rel_path)
+    write_path = Path.join(directory, rel_path)
     File.write(write_path, compiled_template)
 
     puts "CREATE #{rel_path}"

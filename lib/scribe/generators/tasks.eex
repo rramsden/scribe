@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Db do
   end
 
   defmodule Migration do
-    def run([name]), do: Scribe.create_migration(name)
+    def run([name]), do: Scribe.create_migration(name, System.cwd)
   end
 
   defmodule Migrate do

@@ -33,6 +33,13 @@ defmodule ScribeTest do
     Scribe.drop_database([{:config_path, @_config_path}])
   end
 
+  test "creates a migration", meta do
+    Scribe.init(meta[:tmp_dir])
+    assert length(Path.wildcard(Path.join(meta[:tmp_dir], "db/migrations/*"))) == 0
+    Scribe.create_migration("users", meta[:tmp_dir])
+    assert length(Path.wildcard(Path.join(meta[:tmp_dir], "db/migrations/*"))) == 1
+  end
+
   test "initializes a project directory", meta do
     Scribe.init(meta[:tmp_dir])
     assert File.exists?(Path.join(meta[:tmp_dir], "db/migrations"))
