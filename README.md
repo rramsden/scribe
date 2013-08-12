@@ -39,3 +39,9 @@ Run a Mix Task
     mix db.migrate # run migrations
     mix db.drop # drop database
     mix db.create # create database
+
+## License
+
+[MIT license](http://www.opensource.org/licenses/mit-license.php).
+
+See the `LICENSE`.
