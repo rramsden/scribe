@@ -37,6 +37,7 @@ Run a Mix Task
 
     mix db.migration some_migration_name # create a migration
     mix db.migrate # run migrations
+    mix db.rollback # roll a migration back
     mix db.drop # drop database
     mix db.create # create database
 
