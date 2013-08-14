@@ -1,16 +1,19 @@
 defmodule Mix.Tasks.Db do
   use Mix.Task
 
-  def config_path, do: Path.join(System.cwd, "db/scribe.conf")
+  def config do
+    path = Path.join(System.cwd, "db/scribe.conf")
+    Scribe.Utils.load_config(path)
+  end
 
   def run(_), do: :ok
 
   defmodule Drop do
-    def run(_), do: Scribe.drop_database(Mix.Tasks.Db.config_path)
+    def run(_), do: Scribe.drop_database(Mix.Tasks.Db.config)
   end
 
   defmodule Create do
-    def run(_), do: Scribe.create_database(Mix.Tasks.Db.config_path)
+    def run(_), do: Scribe.create_database(Mix.Tasks.Db.config)
   end
 
   defmodule Migration do
@@ -18,6 +21,10 @@ defmodule Mix.Tasks.Db do
   end
 
   defmodule Migrate do
-    def run(_), do: Scribe.migrate(System.cwd, Mix.Tasks.Db.config_path)
+    def run(_), do: Scribe.Migration.up(System.cwd, Mix.Tasks.Db.config)
+  end
+
+  defmodule Rollback do
+    def run(_), do: Scribe.Migration.down(System.cwd, Mix.Tasks.Db.config)
   end
 end

@@ -37,11 +37,6 @@ defmodule ScribeTest do
     assert length(Path.wildcard(Path.join(meta[:project_dir], "db/migrations/*"))) == 1
   end
 
-  test "runs a migration", meta do
-    Scribe.create_migration("users", meta[:project_dir])
-    Scribe.migrate(meta[:project_dir], @_config_path)
-  end
-
   test "initializes a project directory", meta do
     assert File.exists?(Path.join(meta[:project_dir], "db/migrations"))
     assert File.exists?(Path.join(meta[:project_dir], "db/scribe.conf"))
